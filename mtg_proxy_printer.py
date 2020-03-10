@@ -46,7 +46,7 @@ def read_deck(input_fullpath):
 
 def download_image(card_name, images_full_path):
     scryfall_search = 'https://api.scryfall.com/cards/search'
-    options = {'format': 'json', 'order': 'released', 'unique': 'art', 'order': 'released', 'dir': 'asc', 'q': '!"%s" game:paper' % card_name}
+    options = {'format': 'json', 'order': 'released', 'dir': 'asc', 'unique': 'art', 'q': '!"%s" game:paper' % card_name}
     json_result = requests.get(scryfall_search, params=options)
     url_result = json_result.json()['data'][0]["image_uris"]["border_crop"]
     img_result = requests.get(url_result)
