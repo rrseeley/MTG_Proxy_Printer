@@ -17,11 +17,14 @@ from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.units import mm
 import settings_default as settings
 
-
+# In main.py this is the primary job that is being executed
 def mtg_proxy_print(input_filename):
+    # Looks for the txt file name you input
     input_fullpath = os.path.join(settings.DECKS_FULL_PATH, input_filename)
+    # If it doesnt find it, check the spelling
     if not os.path.exists(input_fullpath):
         raise Exception('File with the name "%s" doesn\'t exist.' % input_fullpath)
+    # Reads the text file and loads the information into memory    
     deck = read_deck(input_fullpath)
     download_missing_images(deck, settings.IMAGES_FULL_PATH)
     print_pdf(deck, input_filename, settings.OUTPUT_PATH, settings.IMAGES_FULL_PATH)
@@ -29,11 +32,13 @@ def mtg_proxy_print(input_filename):
 
 def read_deck(input_fullpath):
     f = codecs.open(input_fullpath, "r", "utf-8")
-    # parse file into deck list
+    # Loads the deck txt file and reads it
     deck = []
     for line in f:
         # remove BOM if present and strip
         line = line.lstrip(str(codecs.BOM_UTF8, "utf8")).strip()
+        # In the next step we are downloading any images we dont already have saved to c:\*\downloaded_images
+        # We need to first remove the quantity from the line before the card name
         match = re.match('(\d+) ([ \S]+)', line)
         if match is None:
             continue
@@ -46,9 +51,18 @@ def read_deck(input_fullpath):
 
 def download_image(card_name, images_full_path):
     scryfall_search = 'https://api.scryfall.com/cards/search'
-    options = {'format': 'json', 'order': 'released', 'dir': 'asc', 'unique': 'art', 'q': '!"%s" game:paper' % card_name}
+
+    # Scryfall API search reference https://scryfall.com/docs/syntax
+    # The options I set are personal preference. Looks for only 1 image of a card and will pick the oldest one. 
+    # Some cards release dates have promos (prerelease, judge foils etc) that will turn up first. The parameters exclude those. 
+    options = {'format': 'json', 'q': '!"%s" game:paper prefer:oldest not:promo unique:cards is:nonfoil' % card_name}
     json_result = requests.get(scryfall_search, params=options)
+    # When troubleshooting, uncomment the line below to get all the data that is returned from Scryfall
+    # print('json content: %s' % json_result.content)
+    # Once we have the card image identified, we can choose what image to download. For this script, we are using the border_crop version
+    # Refer to https://scryfall.com/docs/api/images for all options
     url_result = json_result.json()['data'][0]["image_uris"]["border_crop"]
+    # This gives us the URL for the exact image we are downloading
     img_result = requests.get(url_result)
     # Could be a bad name, or something else
     if img_result.status_code != 200:
@@ -58,7 +72,7 @@ def download_image(card_name, images_full_path):
     img_path = get_image_full_path(card_name, images_full_path)
     with open(img_path, 'wb') as wfile:
         wfile.write(img_result.content)
-    print('Downloaded image from scryfall to %s' % img_path)
+    print('Downloaded image of %s - Scryfall URL %s' % (card_name, url_result))
 
 
 def get_image_full_path(card_name, images_full_path):

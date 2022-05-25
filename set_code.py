@@ -55,7 +55,7 @@ def magic_set_code(deck, output_fullpath, output_repository):
 
 def get_set_code(card_name, output_fullpath): 
     scryfall_search = 'https://api.scryfall.com/cards/search'
-    options = {'format': 'json', 'order': 'released', 'dir': 'asc', 'unique': 'art', 'q': '!"%s" game:paper' % card_name}
+    options = {'format': 'json', 'q': '!"%s" game:paper prefer:oldest not:promo unique:cards is:nonfoil' % card_name}
     json_result = requests.get(scryfall_search, params=options)
     set_result = json_result.json()['data'][0]["set"]
     card_set = ('%s (%s) \n' % (card_name, set_result))
