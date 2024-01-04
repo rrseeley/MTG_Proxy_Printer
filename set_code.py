@@ -35,9 +35,10 @@ def read_deck(input_fullpath):
     # parse file into deck list
     deck = []
     for line in f:
-        # remove BOM if present and strip
+        # remove BOM (Byte Order Mark) if present and strip
         line = line.lstrip(str(codecs.BOM_UTF8, "utf8")).strip()
-        match = re.match('(\d+) ([ \S]+)', line)
+        # an update to re? needed to add a raw string in front of '(\d+) in order to properly escape
+        match = re.match(r'(\d+) ([ \S]+)', line)
         if match is None:
             continue
         amount = int(match.group(1))
@@ -55,8 +56,19 @@ def magic_set_code(deck, output_fullpath, output_repository):
 
 def get_set_code(card_name, output_fullpath): 
     scryfall_search = 'https://api.scryfall.com/cards/search'
-    options = {'format': 'json', 'q': '!"%s" game:paper prefer:oldest not:promo unique:cards is:nonfoil' % card_name}
+    # Next lines allows to pass parameters to whittle down the version of the card we are looking for.
+    # 'format': 'json': defines how we want the data returned. Important for finding the set code.
+    # 'q': '!"%s": query the first string. In this case card_name
+    # game:paper: lets us choose which version of magic we which to search, mtgo, arena and paper are supported. We only care about paper
+    # (not:promo or s:phpr): the nested parameter tells it we are not looking for any promo cards unless the set code matched phpr (HarperPrism Book Promos). This is specifically to capture the correct set for Mana Crypt and the other book promos from the mid-90s
+    # unique:cards: will return 1 card for each unique art printing
+    # not:judge_gift: Initially had is:nonfoil due to Gaea's Cradle judge foil having an earlier release date than the Urza's Saga version. This worked fine until you search for a card and the only printing was a foil commander in a precon
+    # not:boosterfun: Boosterfun is a catchall term WotC uses to define any card with an alternate art treatment. ie: extended art, showcase, inverted, etched, borderless etc
+
+
+    options = {'format': 'json', 'q': '!"%s" game:paper prefer:oldest (not:promo or s:phpr) unique:cards not:judge_gift not:boosterfun' % card_name}
     json_result = requests.get(scryfall_search, params=options)
+    # 
     set_result = json_result.json()['data'][0]["set"]
     card_set = ('%s (%s) \n' % (card_name, set_result))
     with open(output_fullpath, 'a') as wfile:
