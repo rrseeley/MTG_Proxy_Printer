@@ -126,7 +126,14 @@ def get_image_full_path(card_name, images_full_path):
 def download_missing_images(deck, images_full_path):
     # download missing images
     if not os.path.exists(images_full_path):
-        os.makedirs(images_full_path)
+        user_input = input(f"Directory '{images_full_path}' doesn't exist. Hit Enter to create it or N to exit: ")
+        if user_input.lower() in ('yes', '', 'y'):
+            os.makedirs(images_full_path)
+            print(f"Directory '{images_full_path}' created.") 
+        else:
+            print("Exiting the script")
+            sys.exit()
+        
     for card_name in set(deck):
         path = get_image_full_path(card_name, images_full_path)
         if not os.path.exists(path):
@@ -136,7 +143,13 @@ def download_missing_images(deck, images_full_path):
 def print_pdf(deck, input_filename, output_path, images_full_path):
     # card size in mm
     if not os.path.exists(output_path):
-        os.makedirs(output_path)
+        user_input = input(f"Directory '{output_path}' doesn't exist. Hit Enter to create it or N to exit: ")
+        if user_input.lower() in ('yes', '', 'y'):
+            os.makedirs(output_path)
+            print(f"Directory '{output_path}' created.") 
+        else:
+            print("Exiting the script")
+            sys.exit()
     CARD_WIDTH = settings.CARD_WIDTH
     CARD_HEIGHT = settings.CARD_HEIGHT
     CARD_HORIZONTAL_SPACING = settings.CARD_HORIZONTAL_SPACING
