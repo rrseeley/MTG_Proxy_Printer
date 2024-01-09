@@ -2,16 +2,16 @@ import os
 import sys
 
 if __name__ == '__main__':
-    try:
-        import settings
-    except ImportError:
-        print('You can modify settings by putting your definitions to settings.py file - just copy settings_default.py to settings.py and edit content')
-        import settings_default as settings
+   # try:
+   #     import settings
+   # except ImportError:
+   #     print('You can modify settings by putting your definitions to settings.py file - just copy settings_default.py to settings.py and edit content')
+   #     import settings_default as settings
     
     try:
         import reportlab
     except ImportError:
-        print('ReportLab not installed. Go to http://www.reportlab.org/')
+        print('ReportLab not installed. Try running this command: python.exe -m pip install reportlab')
         sys.exit(1)
         
     try:

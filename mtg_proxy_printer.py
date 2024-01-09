@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Input csv format: Amount Name
-10 Swamp
-1 Mountain of Doom
-Images in images/Mountain of Doom.jpg
-Write decks in UTF-8 to manage cards like Æther Vial
-"""
+
 import sys
 import math
 import os
@@ -38,8 +32,8 @@ def read_deck(input_fullpath):
         line = line.lstrip(str(codecs.BOM_UTF8, "utf8")).strip()
         if "//" in line: # DFCs are formatted with the front and back separated by //
             quantity, names = line.split(' ', 1)  # Split at the first space to separate the quantity 
-            quantity = int(quantity)  # Convert quantity to an integer so we print off the same number of front and back images
-            names = names.split("//")  # Split the names based on "//" into 2 lines
+            quantity = int(quantity)  # Convert quantity to an integer so we generate the same number of front and back images in the PDF
+            names = names.split("//")  # Split the names based on "//" into 2 lines and handle them individually
             for name in names:
                 deck.extend([name.strip()] * quantity)  # Replicate the names in the deck list with the same quantity
             # Update deck after processing lines with "//"
@@ -96,18 +90,18 @@ def download_image(card_name, images_full_path):
             img_urls = []
 
             for card_data in json_data:
-                if 'image_uris' in card_data and 'border_crop' in card_data['image_uris']:
+                if 'image_uris' in card_data and 'border_crop' in card_data['image_uris']: #when a match is found, it will look for the URL in the image_uris string to get the URL
                     img_urls.append(card_data['image_uris']['border_crop'])
                 elif 'card_faces' in card_data:
-                    for face in card_data['card_faces']:
-                        if face.get('name') == card_name:  # Match the card name within card_faces
+                    for face in card_data['card_faces']: # for DFC the image_uris string is nested under card_faces
+                        if face.get('name') == card_name:  # there are also two image_uris strings for DFC. This will match the name to the correct URL
                             if 'image_uris' in face and 'border_crop' in face['image_uris']:
                                 img_urls.append(face['image_uris']['border_crop'])
                 break  # Break the loop after finding the matching card
 
             for index, url_result in enumerate(img_urls):
                 img_result = requests.get(url_result)
-                if img_result.status_code != 200:
+                if img_result.status_code != 200: #It found a match but couldnt get the URL for the card image
                     print('Error getting image for card name %s' % card_name)
                     continue
 
