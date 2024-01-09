@@ -12,6 +12,7 @@ import re
 import json
 import requests
 import codecs
+import time 
 
 
 
@@ -53,27 +54,59 @@ def magic_set_code(deck, output_fullpath, output_repository):
         os.makedirs(output_repository)
     for card_name in set(deck):
         get_set_code(card_name, output_fullpath)
+        
 
 def get_set_code(card_name, output_fullpath): 
     scryfall_search = 'https://api.scryfall.com/cards/search'
-    # Next lines allows to pass parameters to whittle down the version of the card we are looking for.
-    # 'format': 'json': defines how we want the data returned. Important for finding the set code.
-    # 'q': '!"%s": query the first string. In this case card_name
-    # game:paper: lets us choose which version of magic we which to search, mtgo, arena and paper are supported. We only care about paper
-    # (not:promo or s:phpr): the nested parameter tells it we are not looking for any promo cards unless the set code matched phpr (HarperPrism Book Promos). This is specifically to capture the correct set for Mana Crypt and the other book promos from the mid-90s
-    # unique:cards: will return 1 card for each unique art printing
-    # not:judge_gift: Initially had is:nonfoil due to Gaea's Cradle judge foil having an earlier release date than the Urza's Saga version. This worked fine until you search for a card and the only printing was a foil commander in a precon
-    # not:boosterfun: Boosterfun is a catchall term WotC uses to define any card with an alternate art treatment. ie: extended art, showcase, inverted, etched, borderless etc
+    search_parameters = [
+            # Search for 1993 / 1997 frame
+            {'format': 'json', 'q': '!"%s" game:paper (frame:1993 or frame:1997) prefer:oldest (not:promo or s:phpr) unique:cards not:judge_gift not:boosterfun -set:sld lang:en' % card_name},
+            # Search for Retro frame
+            {'format': 'json', 'q': '!"%s" game:paper frame:1997 prefer:oldest unique:cards (is:boosterfun or is:judge_gift or is:promo or set:sld) -a:malone lang:en' % card_name},
+            # Search for 2003 / Future frame
+            {'format': 'json', 'q': '!"%s" game:paper (frame:2003 or frame:future) prefer:oldest not:promo unique:cards not:judge_gift not:boosterfun lang:en' % card_name},
+            # Search for 2015 Frame Extended art
+            {'format': 'json', 'q': '!"%s" game:paper prefer:oldest unique:cards is:extended lang:en' % card_name},
+            # Take whatever is available
+            {'format': 'json', 'q': '!"%s" game:paper prefer:oldest unique:cards not:promo not:boosterfun not:showcase not:etched -frame:inverted lang:en' % card_name},    
+    ]
 
-
-    options = {'format': 'json', 'q': '!"%s" game:paper prefer:oldest (not:promo or s:phpr) unique:cards not:judge_gift not:boosterfun' % card_name}
-    json_result = requests.get(scryfall_search, params=options)
-    # 
-    set_result = json_result.json()['data'][0]["set"]
-    card_set = ('%s (%s) \n' % (card_name, set_result))
-    with open(output_fullpath, 'a') as wfile:
-        wfile.write(card_set)
-        wfile.close()
+            # Message for each parameter set
+    parameter_messages = [
+            "93/97",
+            "Retro",
+            "03/Future",
+            "Extended",
+            "Basic Bitch",
+    ]
+    found = False
+    for idx, params in enumerate(search_parameters, start=1):
+        options = params
+        json_result = requests.get(scryfall_search, params=options)
+        
+        if json_result.status_code == 200:
+            data = json_result.json()
+            if data.get('data'):
+                set_result = data['data'][0]["set"]
+                card_number = data['data'][0]["collector_number"]
+                card_set = '%s (%s) %s\n' % (card_name, set_result, card_number)
+                
+                with open(output_fullpath, 'a', encoding='utf-8') as wfile:
+                    wfile.write(card_set)
+                    wfile.close()
+                found = True
+                print(f"{card_name} found in {parameter_messages[idx - 1]} Frame")  # Adjust index to match parameter numbering
+                break  # Exit the loop if a card is found
+        
+        # Print the custom message for the current parameter set
+        
+        
+        # Introduce a delay before retrying to avoid hitting API rate limits
+        time.sleep(0.1)  # Adjust the delay time as needed
+        
+    if not found:
+        print(f"Card '{card_name}' not found with any of the provided parameters.")
+     
     
 try:
     input_filename = os.path.basename(sys.argv[1])
