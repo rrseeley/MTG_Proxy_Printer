@@ -16,6 +16,7 @@ import codecs
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.units import mm
 import settings_default as settings
+import time
 
 # In main.py this is the primary job that is being executed
 def mtg_proxy_print(input_filename):
@@ -32,48 +33,97 @@ def mtg_proxy_print(input_filename):
 
 def read_deck(input_fullpath):
     f = codecs.open(input_fullpath, "r", "utf-8")
-    # Loads the deck txt file and reads it
     deck = []
-    for line in f:
-        # remove BOM if present and strip
+    for line in f: # This part is necessary to handle DFCs that are formatted: Front_Card // Back_Card.
         line = line.lstrip(str(codecs.BOM_UTF8, "utf8")).strip()
-        # In the next step we are downloading any images we dont already have saved to c:\*\downloaded_images
-        # We need to first remove the quantity from the line before the card name
-        match = re.match('(\d+) ([ \S]+)', line)
-        if match is None:
-            continue
-        amount = int(match.group(1))
-        name = match.group(2).strip()
-        deck.extend([name] * amount)
+        if "//" in line: # DFCs are formatted with the front and back separated by //
+            quantity, names = line.split(' ', 1)  # Split at the first space to separate the quantity 
+            quantity = int(quantity)  # Convert quantity to an integer so we print off the same number of front and back images
+            names = names.split("//")  # Split the names based on "//" into 2 lines
+            for name in names:
+                deck.extend([name.strip()] * quantity)  # Replicate the names in the deck list with the same quantity
+            # Update deck after processing lines with "//"
+    f.seek(0)  # Reset file pointer to the beginning of the file
+    for line in f:
+        line = line.lstrip(str(codecs.BOM_UTF8, "utf8")).strip()
+        if "//" not in line:  # Process lines without "//"
+            match = re.match(r'(\d+) ([ \S]+)', line) 
+            if match is None:
+                continue
+            amount = int(match.group(1)) # Convert quantity to an integer so we know how many copies of the card should be on the PDF
+            name = match.group(2).strip() # Grabs the card name, removing leading + trailing spaces
+            deck.extend([name] * amount)
     f.close()
     return deck
 
 
 def download_image(card_name, images_full_path):
     scryfall_search = 'https://api.scryfall.com/cards/search'
+    spelling_check = {'format': 'json', 'q': '!"%s" game:paper' % card_name} # Searches to see if card exists in the paper format.
+    spelling_result = requests.get(scryfall_search, params=spelling_check)
+    if spelling_result.status_code != 200:
+         print(f"Can not find {card_name} on Scryfall. Check spelling / DFC formatting in the txt and re-run.")
+         sys.exit()
 
-    # Scryfall API search reference https://scryfall.com/docs/syntax
-    # The options I set are personal preference. Looks for only 1 image of a card and will pick the oldest one. 
-    # Some cards release dates have promos (prerelease, judge foils etc) that will turn up first. The parameters exclude those. 
-    options = {'format': 'json', 'q': '!"%s" game:paper prefer:oldest not:promo unique:cards is:nonfoil' % card_name}
-    json_result = requests.get(scryfall_search, params=options)
-    # When troubleshooting, uncomment the line below to get all the data that is returned from Scryfall
-    # print('json content: %s' % json_result.content)
-    # Once we have the card image identified, we can choose what image to download. For this script, we are using the border_crop version
-    # Refer to https://scryfall.com/docs/api/images for all options
-    url_result = json_result.json()['data'][0]["image_uris"]["border_crop"]
-    # This gives us the URL for the exact image we are downloading
-    img_result = requests.get(url_result)
-    # Could be a bad name, or something else
-    if img_result.status_code != 200:
-        print('Error getting image for card name %s: %s' % (card_name, img_result.content))
-        return False
+    search_parameters = [
+            # Search for 1993 / 1997 frame
+            {'format': 'json', 'q': '!"%s" game:paper (frame:1993 or frame:1997) prefer:oldest (not:promo or s:phpr) unique:cards not:judge_gift not:boosterfun -set:sld lang:en' % card_name},
+            # Search for Retro frame
+            {'format': 'json', 'q': '!"%s" game:paper frame:1997 prefer:oldest unique:cards (is:boosterfun or is:judge_gift or is:promo or set:sld) -a:malone lang:en' % card_name},
+            # Search for 2003 / Future frame
+            {'format': 'json', 'q': '!"%s" game:paper (frame:2003 or frame:future) prefer:oldest not:promo unique:cards not:judge_gift not:boosterfun lang:en' % card_name},
+            # Search for 2015 Frame Extended art
+            {'format': 'json', 'q': '!"%s" game:paper prefer:oldest unique:cards is:extended lang:en' % card_name},
+            # Take whatever is available
+            {'format': 'json', 'q': '!"%s" game:paper prefer:oldest unique:cards not:promo not:boosterfun not:showcase not:etched -frame:inverted lang:en' % card_name},    
+    ]
 
-    img_path = get_image_full_path(card_name, images_full_path)
-    with open(img_path, 'wb') as wfile:
-        wfile.write(img_result.content)
-    print('Downloaded image of %s - Scryfall URL %s' % (card_name, url_result))
+            # Message for each parameter set
+    parameter_messages = [
+            "93/97",
+            "Retro",
+            "03/Future",
+            "Extended",
+            "Basic Bitch",
+    ]
+    found = False
+    for idx, params in enumerate(search_parameters, start=1): # Starting with the first search parameter, it will go down each one till it gets a match
+        options = params
+        json_result = requests.get(scryfall_search, params=options)
 
+        if json_result.status_code == 200:      
+            json_data = json_result.json()['data']
+            img_urls = []
+
+            for card_data in json_data:
+                if 'image_uris' in card_data and 'border_crop' in card_data['image_uris']:
+                    img_urls.append(card_data['image_uris']['border_crop'])
+                elif 'card_faces' in card_data:
+                    for face in card_data['card_faces']:
+                        if face.get('name') == card_name:  # Match the card name within card_faces
+                            if 'image_uris' in face and 'border_crop' in face['image_uris']:
+                                img_urls.append(face['image_uris']['border_crop'])
+                break  # Break the loop after finding the matching card
+
+            for index, url_result in enumerate(img_urls):
+                img_result = requests.get(url_result)
+                if img_result.status_code != 200:
+                    print('Error getting image for card name %s' % card_name)
+                    continue
+
+
+            img_path = get_image_full_path(card_name, images_full_path)
+
+            with open(img_path, 'wb') as wfile:
+                wfile.write(img_result.content)
+            found = True
+            print(f"{card_name} found in {parameter_messages[idx - 1]} Frame - Scryfall URL {url_result}")
+                
+        time.sleep(0.1)
+        if found:
+            break
+
+    return found
 
 def get_image_full_path(card_name, images_full_path):
     return os.path.join(images_full_path, '%s.jpg' % card_name.replace("'", ""))
