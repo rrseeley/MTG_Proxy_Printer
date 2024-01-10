@@ -62,13 +62,35 @@ If you don't see an output similar to this, it likely means python.exe was not a
 - Setup is complete. Keep the Command prompt open for the next part.
 
 ## Using the script
-Create a txt file with list of cards with the quantity desired. The format should be like this:
+### Creating the txt file:
+Create a list of cards with the quantity desired. For 99% of Magic cards, the format will look like this:
 
     1 Card_1 
     1 Card_2 
     1 Card_3
 
-Save the list in the directory you created above. 
+[Double Face](https://scryfall.com/search?q=is:dfc%20game:paper%20is:commander&unique=cards&as=grid&order=name), [Transform](https://scryfall.com/search?q=is:transform&unique=cards&as=grid&order=name), [Split](https://scryfall.com/search?q=is:split&unique=cards&as=grid&order=name), [Flip](https://scryfall.com/search?q=is:flip&unique=cards&as=grid&order=name) and [Meld](https://scryfall.com/search?q=is:meld&unique=cards&as=grid&order=name) each require additional formatting.
+
+**Doubt Face + Transform:** To capture both the front and back image, either format both names with a // separating them or put each name on a separate line.
+Example: 
+
+    1 Wandering Archaic // Explore the Vastlands
+    1 Wandering Archaic
+    1 Explore the Vastlands`
+
+**Split + Flip:** Have 2 names but only 1 image. Format the card by putting both names with a space separating them. Flip cards are usually specific enough in their first name that you can leave out the second.
+Example:
+
+    1 Dusk Dawn
+    1 Nezumi Graverobber
+    1 Nezumi Graverobber Nighteyes the Desecrator
+    
+**Meld:** In print, these cards have half their meld form on the back. On Scryfall, the meld card is a separate image. If you want to add an image of the meld to a PDF, you will need to list it in the txt
+Example:
+
+    1 Urza, Lord Protector
+    1 The Mightstone and Weakstone
+    1 Urza, Planeswalker 
 #### Creating a PDF: 
 In the Command Prompt, type in main.py your_decklistname.txt
 The first time you run this, it will ask to create a folder called downloaded_images and PDFs. Hit enter to create.
