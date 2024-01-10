@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Input csv format: Amount Name
-10 Swamp
-1 Mountain of Doom
-Images in images/Mountain of Doom.jpg
-Write decks in UTF-8 to manage cards like Æther Vial
-"""
+
 import sys
 import os
 import re
@@ -26,8 +19,13 @@ def mtg_proxy_print(input_filename):
         raise Exception('File with the name "%s" doesn\'t exist.' % input_fullpath)
         sys.exit(1)
     if os.path.exists(output_fullpath):
-        raise Exception('File with the name "%s" already exists.' % output_fullpath)
-        sys.exit(1)
+        user_input = input(f"Directory '{output_fullpath}' already exists. Hit Enter to overwrite or N to exit: ")
+        if user_input.lower() in ('yes', '', 'y'):
+            with open(output_fullpath, 'w', encoding='utf-8') as wfile:
+                wfile.close() 
+        else:
+            print("Exiting the script")
+            sys.exit()
     deck = read_deck(input_fullpath)
     magic_set_code(deck, output_fullpath, output_repository)
         
@@ -49,9 +47,16 @@ def read_deck(input_fullpath):
     return deck
 
 def magic_set_code(deck, output_fullpath, output_repository):
-    # download missing images
+    
     if not os.path.exists(output_repository):
-        os.makedirs(output_repository)
+        user_input = input(f"Directory '{output_repository}' doesn't exist. Hit Enter to create it or N to exit: ")
+        if user_input.lower() in ('yes', '', 'y'):
+            os.makedirs(output_repository)
+            print(f"Directory '{output_repository}' created.") 
+        else:
+            print("Exiting the script")
+            sys.exit()
+        
     for card_name in set(deck):
         get_set_code(card_name, output_fullpath)
         
