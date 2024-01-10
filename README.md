@@ -6,6 +6,30 @@ There are two primary python scripts that accomplish this task.
  - Main.py will download an image of each card in your deck and assemble it into a printable PDF for creating proxies
  - set_code.py will capture the MTG set code and collector number of each card. A new text file is created allowing you to copy/paste it into a deck builder site like Moxfield
 
+### Card Image Selection
+To determine which image the script will select, it will search these options in order until it finds a match
+1. [1993](https://scryfall.com/search?q=game:paper%20frame:1993%20prefer:oldest%20%28not:promo%20or%20s:phpr%29%20unique:cards%20not:judge_gift%20not:boosterfun%20-set:sld%20lang:en&unique=cards&as=grid&order=name)/[1997](https://scryfall.com/search?q=game:paper%20frame:1997%20prefer:oldest%20%28not:promo%20or%20s:phpr%29%20unique:cards%20not:judge_gift%20not:boosterfun%20-set:sld%20lang:en&unique=cards&as=grid&order=name) Frame. Excludes foils, SLD and promos except Harper Prism book cards
+2. [1997 Retro](https://scryfall.com/search?q=game:paper%20frame:1997%20prefer:oldest%20unique:cards%20%28is:boosterfun%20or%20is:judge_gift%20or%20is:promo%20or%20set:sld%29%20-a:malone%20lang:en&unique=cards&as=grid&order=name) Frame. Includes promos, judge foils and SLD except Post Malone's scribbles. 
+3. [2003](https://scryfall.com/search?q=frame:2003&unique=cards&as=grid&order=name)/[Future](https://scryfall.com/search?q=frame:future&unique=cards&as=grid&order=name) Frame. Excludes foils, SLD and promos
+4. [2015 Extended Art](https://scryfall.com/search?q=game:paper%20prefer:oldest%20unique:cards%20is:extended%20lang:en&unique=cards&as=grid&order=name) Frame. New cards printed where the art is extended
+5. [2015 Basic](https://scryfall.com/search?q=game:paper%20prefer:oldest%20unique:cards%20not:promo%20not:boosterfun%20not:showcase%20not:etched%20-frame:inverted%20lang:en&unique=cards&as=grid&order=name) Frame. Excludes promos, borderless, showcase, etched, SLD and inverted.
+
+This selection is based on personal preference and can be modified
+In set_code.py and mtg_proxy_printer.py under search_parameters
+
+        search_parameters = [
+            # Search for 1993 / 1997 frame
+            {'format': 'json', 'q': '!"%s" game:paper (frame:1993 or frame:1997) prefer:oldest (not:promo or s:phpr) unique:cards not:judge_gift not:boosterfun -set:sld lang:en' % card_name},
+            # Search for Retro frame
+            {'format': 'json', 'q': '!"%s" game:paper frame:1997 prefer:oldest unique:cards (is:boosterfun or is:judge_gift or is:promo or set:sld) -a:malone lang:en' % card_name},
+            # Search for 2003 / Future frame
+            {'format': 'json', 'q': '!"%s" game:paper (frame:2003 or frame:future) prefer:oldest not:promo unique:cards not:judge_gift not:boosterfun lang:en' % card_name},
+            # Search for 2015 Frame Extended art
+            {'format': 'json', 'q': '!"%s" game:paper prefer:oldest unique:cards is:extended lang:en' % card_name},
+            # Take whatever is available
+            {'format': 'json', 'q': '!"%s" game:paper prefer:oldest unique:cards not:promo not:boosterfun not:showcase not:etched -frame:inverted lang:en' % card_name},    
+    ]
+
 ## Installation
 This portion assumes you are new to Python and will walk through each step.
 
