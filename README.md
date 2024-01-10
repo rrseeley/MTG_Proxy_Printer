@@ -6,3 +6,4 @@
 <img width="525" alt="first_run" src="https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/c0441ce6-885d-4848-aaba-5b4c63a5962c">
 <img width="692" alt="DL_zip" src="https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/b13c21bf-cb4d-4dea-ab8a-65664f82029c">
 <img width="602" alt="verify" src="https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/27cdebd0-8081-4fed-bb6d-32919f79a535">
+<img width="287" alt="folderstruc" src="https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/7e461ddc-c2ff-4a96-a5f2-1db45d45912a">
