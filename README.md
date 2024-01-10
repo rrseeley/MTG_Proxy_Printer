@@ -92,7 +92,10 @@ Example:
     1 The Mightstone and Weakstone
     1 Urza, Planeswalker 
 #### Creating a PDF: 
-In the Command Prompt, type in main.py your_decklistname.txt
+In the Command Prompt, type in 
+
+> main.py your_deck_name.txt
+
 The first time you run this, it will ask to create a folder called downloaded_images and PDFs. Hit enter to create.
 In this example, I am creating a printable PDF of the Power 9. The output lists the frame and the URL of the image:
 ![enter image description here](https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/c0441ce6-885d-4848-aaba-5b4c63a5962c)
@@ -102,7 +105,10 @@ Navigate to the PDFs directory and you will see the printable PDF
 
 #### Creating a txt with the Set Code + Collector Number of each card
 
-In the Command Prompt, type in set_code.py your_decklistname.txt
+In the Command Prompt, type in 
+
+> set_code.py your_decklistname.txt
+
 The first time you run this, it will ask to create a folder called set_added. Hit enter to create.
 ![enter image description here](https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/d0a952a4-cd33-47db-a050-6915e4a48e97)
 
