@@ -104,7 +104,8 @@ The first time you run this, it will ask to create a folder called downloaded_im
 In this example, I am creating a printable PDF of the Power 9. The output lists the frame and the URL of the image:
 ![enter image description here](https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/c0441ce6-885d-4848-aaba-5b4c63a5962c)
 
-Navigate to the PDFs directory and you will see the printable PDF
+Navigate to the PDFs directory and you will see the printable PDF:
+
 ![enter image description here](https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/e4b9cc59-dfda-47db-968c-b096ff378c33)
 
 #### Creating a txt with the Set Code + Collector Number of each card
