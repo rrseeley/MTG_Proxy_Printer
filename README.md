@@ -58,7 +58,6 @@ If you don't see an output similar to this, it likely means python.exe was not a
 ![enter image description here](https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/b13c21bf-cb4d-4dea-ab8a-65664f82029c)
 
 - Open the ZIP and copy the files to MTGProxy or whatever you named the folder. **Your folder structure should look something like this:**
-  
 ![enter image description here](https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/7e461ddc-c2ff-4a96-a5f2-1db45d45912a)
 
 - Setup is complete. Keep the Command prompt open for the next part.
