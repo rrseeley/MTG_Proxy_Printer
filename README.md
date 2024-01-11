@@ -101,6 +101,7 @@ In the Command Prompt, type in
 > main.py your_deck_name.txt
 
 The first time you run this, it will ask to create a folder called downloaded_images and PDFs. Hit enter to create.
+
 In this example, I am creating a printable PDF of the Power 9. The output lists the frame and the URL of the image:
 ![enter image description here](https://github.com/rrseeley/MTG_Proxy_Printer/assets/57955702/c0441ce6-885d-4848-aaba-5b4c63a5962c)
 
